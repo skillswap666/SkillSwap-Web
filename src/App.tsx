@@ -1,0 +1,96 @@
+import React from 'react';
+import { AppProvider, useApp } from './contexts/AppContext';
+import { Navigation } from './components/Navigation';
+import { HomePage } from './components/HomePage';
+import { ExploreWorkshops } from './components/ExploreWorkshops';
+import { Dashboard } from './components/Dashboard';
+import { Credits } from './components/Credits';
+import { CreateWorkshop } from './components/CreateWorkshop';
+import { AuthPage } from './components/AuthPage';
+import { Toaster } from './components/ui/sonner';
+
+function AppContent() {
+  const { currentPage, isLoading, isDarkMode } = useApp();
+
+  // Apply theme class to html element
+  React.useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    } else {
+      document.documentElement.classList.add('light');
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <span className="text-white font-bold text-xl">SS</span>
+          </div>
+          <p className="text-muted-foreground">Loading Skill Swap Club...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'home':
+        return <HomePage />;
+      case 'explore':
+        return <ExploreWorkshops />;
+      case 'dashboard':
+        return <Dashboard />;
+      case 'credits':
+        return <Credits />;
+      case 'create':
+        return <CreateWorkshop />;
+      case 'auth':
+        return <AuthPage />;
+      case 'leaderboard':
+        return <div className="min-h-screen bg-background pt-20 lg:pt-24 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Leaderboard</h1>
+            <p className="text-muted-foreground">Coming soon! Track top contributors and workshop hosts.</p>
+          </div>
+        </div>;
+      case 'feedback':
+        return <div className="min-h-screen bg-background pt-20 lg:pt-24 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Feedback & Reviews</h1>
+            <p className="text-muted-foreground">Coming soon! Rate workshops and provide feedback.</p>
+          </div>
+        </div>;
+      case 'settings':
+        return <div className="min-h-screen bg-background pt-20 lg:pt-24 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Settings</h1>
+            <p className="text-muted-foreground">Coming soon! Manage your preferences and account settings.</p>
+          </div>
+        </div>;
+      default:
+        return <HomePage />;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <main>
+        {renderPage()}
+      </main>
+      <Toaster />
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AppProvider>
+      <AppContent />
+    </AppProvider>
+  );
+}
