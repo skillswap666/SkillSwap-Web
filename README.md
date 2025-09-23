@@ -14,7 +14,7 @@
   - If you want to write some new functions, please first check the newest master branch by:
 
   ```
-  git pull origin master
+  git pull origin main
   ```
 
   - If you want to push your new codes, please create a new branch by:
