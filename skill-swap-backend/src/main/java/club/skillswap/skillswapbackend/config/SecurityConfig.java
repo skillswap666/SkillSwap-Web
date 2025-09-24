@@ -1,5 +1,6 @@
 package club.skillswap.skillswapbackend.config;
 
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,13 +12,22 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
+
+    private final JwtConverter jwtConverter; // 3. 注入我们的转换器
+
+    public SecurityConfig(JwtConverter jwtConverter) {
+        this.jwtConverter = jwtConverter;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             // 启用 OAuth2 资源服务器功能，并使用 JWT 进行验证
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+            .oauth2ResourceServer(oauth2 -> 
+                oauth2.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtConverter))
+                )
             
             // 禁用 CSRF，因为我们使用无状态的 JWT
             .csrf(csrf -> csrf.disable())
