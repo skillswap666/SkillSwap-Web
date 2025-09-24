@@ -1,10 +1,14 @@
 package club.skillswap.skillswapbackend.service;
 
-import club.skillswap.skillswapbackend.entity.UserAccount;
-import club.skillswap.skillswapbackend.repository.UserRepository;
+
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.apache.commons.lang3.RandomStringUtils;
+
+import club.skillswap.skillswapbackend.entity.UserAccount;
+import club.skillswap.skillswapbackend.repository.UserRepository;
+import club.skillswap.skillswapbackend.exception.ResourceNotFoundException;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -24,7 +28,7 @@ public class UserService {
      */
     public UserAccount findUserById(UUID userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("UserAccount", "ID", userId));
     }
 
     /**
@@ -47,10 +51,18 @@ public class UserService {
         UserAccount newUser = new UserAccount();
         newUser.setId(userId);
 
-        // 从 JWT 中获取 email，并用它来生成一个默认的 username
         String email = jwt.getClaimAsString("email");
-        String defaultUsername = email.split("@")[0]; // 例如, "john.doe@email.com" -> "john.doe"
-        newUser.setUsername(defaultUsername);
+        String baseUsername = email.split("@")[0]
+                                .replaceAll("[^a-zA-Z0-9]", "_"); // 清理特殊字符
+
+        // --- 健壮的用户名生成逻辑 ---
+        String finalUsername = baseUsername;
+        // 循环检查，直到找到一个不重复的用户名
+        while (userRepository.findByUsername(finalUsername).isPresent()) {
+            // 如果重复，就在后面加上 4 位随机字母和数字
+            finalUsername = baseUsername + "_" + RandomStringUtils.randomAlphanumeric(4);
+        }
+        newUser.setUsername(finalUsername);
         
         // 你可以在这里设置其他默认值，例如 avatarUrl
         
