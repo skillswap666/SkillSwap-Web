@@ -27,9 +27,19 @@
   cd skill-swap-backend
   ```
 
-  Run `.\gradlew.bat bootRun` for Windows
+  Run below for installing dependencies
 
-  Run `./gradlew bootRun` for Mac
+  ```bash
+  ./gradlew build          # macOS/Linux
+  gradlew.bat build        # Windows
+  ```
+  
+  Run below to start the backend
+
+  ```bash
+  ./gradlew bootRun          # macOS/Linux
+  .\gradlew.bat bootRun        # Windows
+  ```
   
   ## Add new functions
 
