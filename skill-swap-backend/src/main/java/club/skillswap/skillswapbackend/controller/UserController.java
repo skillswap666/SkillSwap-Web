@@ -1,5 +1,6 @@
 package club.skillswap.skillswapbackend.controller;
 
+import club.skillswap.skillswapbackend.dto.UpdateProfileRequestDto;
 import club.skillswap.skillswapbackend.dto.UserProfileDto;
 import club.skillswap.skillswapbackend.entity.UserAccount;
 import club.skillswap.skillswapbackend.service.UserService;
@@ -10,6 +11,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.RequestBody; 
 
 import java.util.UUID;
 
@@ -44,6 +47,20 @@ public class UserController {
     public ResponseEntity<UserProfileDto> getUserProfileById(@PathVariable UUID id) {
         UserAccount user = userService.findUserById(id);
         UserProfileDto userProfileDto = UserProfileDto.fromEntity(user);
+        return ResponseEntity.ok(userProfileDto);
+    }
+
+    /**
+     * 更新当前登录用户的个人资料。
+     */
+    @PatchMapping("/me")
+    public ResponseEntity<UserProfileDto> updateCurrentUserProfile(
+            @AuthenticationPrincipal Jwt jwt, 
+            @RequestBody UpdateProfileRequestDto updateRequest) {
+        
+        UserAccount updatedUser = userService.updateCurrentUserProfile(jwt, updateRequest);
+        UserProfileDto userProfileDto = UserProfileDto.fromEntity(updatedUser);
+        
         return ResponseEntity.ok(userProfileDto);
     }
 }

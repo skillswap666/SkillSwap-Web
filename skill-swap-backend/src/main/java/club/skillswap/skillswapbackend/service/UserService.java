@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.apache.commons.lang3.RandomStringUtils;
 
+import club.skillswap.skillswapbackend.dto.UpdateProfileRequestDto;
 import club.skillswap.skillswapbackend.entity.UserAccount;
 import club.skillswap.skillswapbackend.repository.UserRepository;
 import club.skillswap.skillswapbackend.exception.ResourceNotFoundException;
@@ -67,5 +68,32 @@ public class UserService {
         // 你可以在这里设置其他默认值，例如 avatarUrl
         
         return userRepository.save(newUser);
+    }
+
+    /**
+     * 更新当前认证用户的个人资料。
+     */
+    @Transactional
+    public UserAccount updateCurrentUserProfile(Jwt jwt, UpdateProfileRequestDto updateRequest) {
+        UUID userId = UUID.fromString(jwt.getSubject());
+        
+        // 我们使用 findById，而不是 findOrCreate，因为能调用这个方法的用户肯定已经存在了
+        UserAccount userToUpdate = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("UserAccount", "ID", userId));
+
+        // --- 部分更新逻辑 ---
+        // 只有当请求中的字段不为 null 时，才更新对应的实体字段
+        if (updateRequest.getUsername() != null) {
+            // 你可能需要在这里添加检查，确保新用户名没有被其他人占用
+            userToUpdate.setUsername(updateRequest.getUsername());
+        }
+        if (updateRequest.getAvatarUrl() != null) {
+            userToUpdate.setAvatarUrl(updateRequest.getAvatarUrl());
+        }
+        if (updateRequest.getBio() != null) {
+            userToUpdate.setBio(updateRequest.getBio());
+        }
+
+        return userRepository.save(userToUpdate);
     }
 }
