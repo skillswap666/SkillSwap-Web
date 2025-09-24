@@ -1,0 +1,99 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.5.6'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'club.skillswap'
+version = '0.0.1-SNAPSHOT'
+description = 'skill swap project for Spring Boot'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.postgresql:postgresql:42.7.3'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.flywaydb:flyway-core'
+	implementation 'org.flywaydb:flyway-database-postgresql'
+	compileOnly 'org.projectlombok:lombok'
+	runtimeOnly 'org.postgresql:postgresql'
+	implementation 'org.springframework.security:spring-security-oauth2-jose'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+def loadDotEnv() {
+  def map = [:]
+  def envFile = file('.env')
+  if (!envFile.exists()) return map
+
+  envFile.eachLine { raw ->
+    def line = raw.trim()
+    if (!line || line.startsWith('#')) return
+
+    // 兼容 "export KEY=VALUE"
+    if (line.startsWith('export ')) {
+      line = line.substring('export '.length()).trim()
+    }
+
+    def idx = line.indexOf('=')
+    if (idx <= 0) return
+
+    def key = line.substring(0, idx).trim()
+    def val = line.substring(idx + 1).trim()
+
+    // 去掉 UTF-8 BOM
+    if (key.startsWith('\uFEFF')) key = key.substring(1)
+
+    // 去掉包裹引号
+    if ((val.startsWith('"') && val.endsWith('"')) ||
+        (val.startsWith("'") && val.endsWith("'"))) {
+      val = val.substring(1, val.length() - 1)
+    }
+
+    map[key] = val
+  }
+  return map
+}
+
+// 让 bootRun 自动把 .env 注入（环境变量 + System Properties）
+tasks.named('bootRun') {
+  def envMap = loadDotEnv()
+  environment envMap
+  // 同步设置到 JVM System Properties，避免某些环境变量不可见的问题
+  envMap.each { k, v -> systemProperty k, v }
+
+  doFirst {
+    println "[bootRun] Loaded .env keys: ${envMap.keySet()}" // 不打印值
+	println "DB_PASSWORD preview: ${envMap['DB_PASSWORD']}***"
+	println "JWT_HS256_SECRET preview: ${envMap['JWT_HS256_SECRET']}***"
+
+  }
+
+  // 如果你之前加了 JVM 参数，这里也可以顺便一起带上：
+  jvmArgs = ['-Djava.net.preferIPv4Stack=true']
+}
