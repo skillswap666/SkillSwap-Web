@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { 
-  Calendar, 
+  Calendar,
   Users, 
   Star, 
   TrendingUp, 
@@ -128,8 +128,13 @@ export function HomePage() {
               </Button>
             </div>
 
+
+
+            {/* Is upcoming event if not ... */}
             {upcomingWorkshops.length > 0 ? (
               <div className="space-y-4">
+
+                {/* show up to three  Value: workshop[date, time, location, facilator[name] , category]*/}
                 {upcomingWorkshops.slice(0, 3).map((workshop) => (
                   <Card key={workshop.id} className="hover:shadow-md transition-shadow">
                     <CardContent className="p-6">
@@ -198,8 +203,9 @@ export function HomePage() {
                 <TrendingUp className="w-4 h-4" />
                 <span>See More</span>
               </Button>
+              
             </div>
-
+            {/* feature Workshop [workshop[id, image, title, currentParticipants,maxParticipants, facilators [name, rating, avator] ]]   */}
             <div className="space-y-4">
               {featuredWorkshops.map((workshop) => (
                 <Card key={workshop.id} className="hover:shadow-md transition-shadow cursor-pointer">

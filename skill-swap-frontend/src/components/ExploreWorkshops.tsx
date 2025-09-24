@@ -28,6 +28,8 @@ export function ExploreWorkshops() {
   const [selectedLocation, setSelectedLocation] = useState('all');
 
   // Filter workshops based on search and filters
+  // matchesSearch, matchesCategory, matchesSkillLevel, matchesLocation
+  // Return only upcoming workshops
   const filteredWorkshops = workshops.filter(workshop => {
     const matchesSearch = workshop.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          workshop.description.toLowerCase().includes(searchQuery.toLowerCase()) ||

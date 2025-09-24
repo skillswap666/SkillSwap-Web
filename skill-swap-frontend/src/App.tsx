@@ -36,6 +36,7 @@ function AppContent() {
     );
   }
 
+  // Page Switcher , Return HomePage by default
   const renderPage = () => {
     switch (currentPage) {
       case 'home':
@@ -62,13 +63,6 @@ function AppContent() {
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Feedback & Reviews</h1>
             <p className="text-muted-foreground">Coming soon! Rate workshops and provide feedback.</p>
-          </div>
-        </div>;
-      case 'settings':
-        return <div className="min-h-screen bg-background pt-20 lg:pt-24 flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold mb-4">Settings</h1>
-            <p className="text-muted-foreground">Coming soon! Manage your preferences and account settings.</p>
           </div>
         </div>;
       default:

@@ -35,7 +35,7 @@ export function Dashboard() {
   // Recent transactions
   const recentTransactions = transactions.slice(0, 5);
 
-  // Calculate stats
+  // Calculate stats  ?? better to store numbers in database and fetch 
   const upcomingAttended = attendedWorkshops.filter(w => w.status === 'upcoming').length;
   const upcomingHosted = hostedWorkshops.filter(w => w.status === 'upcoming').length;
 
@@ -249,6 +249,8 @@ export function Dashboard() {
                 </Card>
               </TabsContent>
 
+
+                    {/* Edit */}
               <TabsContent value="hosting" className="space-y-4">
                 <Card>
                   <CardHeader>
@@ -289,6 +291,8 @@ export function Dashboard() {
                               >
                                 {workshop.status}
                               </Badge>
+
+                              {/* [] todo will go to form page  */}
                               <Button variant="outline" size="sm">
                                 Edit
                               </Button>

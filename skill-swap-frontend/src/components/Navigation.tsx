@@ -25,10 +25,8 @@ const navItems = [
   { id: 'explore', label: 'Explore', icon: Search },
   { id: 'create', label: 'Create', icon: Plus },
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'credits', label: 'Credits', icon: CreditCard },
   { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
   { id: 'feedback', label: 'Feedback', icon: MessageSquare },
-  { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
 export function Navigation() {
@@ -50,7 +48,7 @@ export function Navigation() {
 
           {/* Navigation Links */}
           <div className="flex items-center space-x-1">
-            {navItems.slice(0, 7).map((item) => {
+            {navItems.slice(0, 6).map((item) => {
               const Icon = item.icon;
               return (
                 <Button
@@ -70,7 +68,11 @@ export function Navigation() {
           {/* User Section */}
           <div className="flex items-center space-x-4">
             {user && (
-              <Badge variant="secondary" className="flex items-center space-x-1">
+              <Badge 
+                variant="secondary" 
+                className="flex items-center space-x-1 cursor-pointer hover:bg-secondary/80 transition-colors"
+                onClick={() => setCurrentPage('credits')}
+              >
                 <CreditCard className="w-3 h-3" />
                 <span>{user.credits}</span>
               </Badge>
@@ -135,10 +137,16 @@ export function Navigation() {
           </div>
 
           <div className="flex items-center space-x-3">
-            <Badge variant="secondary" className="flex items-center space-x-1 text-xs">
-              <CreditCard className="w-3 h-3" />
-              <span>{user.credits}</span>
-            </Badge>
+            {user && (
+              <Badge 
+                variant="secondary" 
+                className="flex items-center space-x-1 text-xs cursor-pointer hover:bg-secondary/80 transition-colors"
+                onClick={() => setCurrentPage('credits')}
+              >
+                <CreditCard className="w-3 h-3" />
+                <span>{user.credits}</span>
+              </Badge>
+            )}
 
             <Button
               variant="ghost"

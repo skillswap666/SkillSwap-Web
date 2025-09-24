@@ -52,55 +52,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   // Check for existing session on load
   useEffect(() => {
-    // Add timeout protection
-    const timeoutId = setTimeout(() => {
-      console.warn('Auth check timeout, falling back to demo mode');
-      setUser(mockUser);
-      setWorkshops(mockWorkshops);
-      setTransactions(mockTransactions);
-      setIsAuthenticated(false);
-      setIsLoading(false);
-    }, 10000); // 10 second timeout
-
-    const initApp = async () => {
-      try {
-        await checkAuthState();
-      } catch (error) {
-        console.error('App initialization error:', error);
-        // Fallback to demo mode
-        setUser(mockUser);
-        setWorkshops(mockWorkshops);
-        setTransactions(mockTransactions);
-        setIsAuthenticated(false);
-        setIsLoading(false);
-      }
-      clearTimeout(timeoutId);
-    };
-
-    initApp();
-    
-    // Listen for auth changes
-    const { data: { subscription } } = authAPI.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        loadUserData().catch(error => {
-          console.error('Auth state change error:', error);
-        });
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        setIsAuthenticated(false);
-        setTransactions([]);
-        // Still load workshops for unauthenticated users
-        loadWorkshops().catch(error => {
-          console.error('Load workshops after signout error:', error);
-          setWorkshops(mockWorkshops);
-        });
-      }
-    });
-
-    return () => {
-      clearTimeout(timeoutId);
-      subscription.unsubscribe();
-    };
+    checkAuthState();
   }, []);
 
   const checkAuthState = async () => {
@@ -168,60 +120,63 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const toggleDarkMode = () => {
     const newDarkMode = !isDarkMode;
     setIsDarkMode(newDarkMode);
+    localStorage.setItem('skill-swap-theme', newDarkMode ? 'dark' : 'light');
     
     if (newDarkMode) {
       document.documentElement.classList.add('dark');
       document.documentElement.classList.remove('light');
-      localStorage.setItem('skill-swap-theme', 'dark');
     } else {
       document.documentElement.classList.add('light');
       document.documentElement.classList.remove('dark');
-      localStorage.setItem('skill-swap-theme', 'light');
-    }
-  };
-
-  const signUp = async (name: string, email: string, password: string) => {
-    try {
-      setIsLoading(true);
-      await authAPI.signUp(name, email, password);
-      // Then sign in
-      await authAPI.signIn(email, password);
-      await loadUserData();
-      toast.success('Account created successfully!');
-      setCurrentPage('home');
-    } catch (error) {
-      console.error('Signup error:', error);
-      toast.error(error instanceof Error ? error.message : 'Signup failed');
-      throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
-      await authAPI.signIn(email, password);
-      await loadUserData();
-      toast.success('Signed in successfully!');
-      setCurrentPage('home');
+      const result = await authAPI.signIn(email, password);
+      if (result.success) {
+        await loadUserData();
+        setCurrentPage('dashboard');
+        toast.success('Signed in successfully!');
+      } else {
+        throw new Error(result.message || 'Sign in failed');
+      }
     } catch (error) {
-      console.error('Signin error:', error);
-      toast.error(error instanceof Error ? error.message : 'Sign in failed');
+      console.error('Sign in error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to sign in');
       throw error;
-    } finally {
-      setIsLoading(false);
+    }
+  };
+
+  const signUp = async (name: string, email: string, password: string) => {
+    try {
+      const result = await authAPI.signUp(name, email, password);
+      if (result.success) {
+        await loadUserData();
+        setCurrentPage('dashboard');
+        toast.success('Account created successfully!');
+      } else {
+        throw new Error(result.message || 'Sign up failed');
+      }
+    } catch (error) {
+      console.error('Sign up error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to create account');
+      throw error;
     }
   };
 
   const signOut = async () => {
     try {
       await authAPI.signOut();
-      toast.success('Signed out successfully');
+      setUser(null);
+      setWorkshops([]);
+      setTransactions([]);
+      setIsAuthenticated(false);
       setCurrentPage('home');
+      toast.success('Signed out successfully');
     } catch (error) {
-      console.error('Signout error:', error);
-      toast.error('Sign out failed');
+      console.error('Sign out error:', error);
+      toast.error('Failed to sign out');
     }
   };
 
@@ -236,38 +191,49 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const result = await workshopAPI.attend(workshopId);
       
       // Update local state
-      setUser(result.user);
       setWorkshops(prev => prev.map(w => 
-        w.id === workshopId ? result.workshop : w
+        w.id === workshopId 
+          ? { ...w, currentParticipants: w.currentParticipants + 1, participants: [...w.participants, user!] }
+          : w
       ));
-      setTransactions(prev => [result.transaction, ...prev]);
       
-      toast.success('Successfully registered for workshop!');
+      // Update user credits
+      if (user) {
+        const workshop = workshops.find(w => w.id === workshopId);
+        if (workshop) {
+          setUser(prev => prev ? { ...prev, credits: prev.credits - workshop.creditCost } : null);
+        }
+      }
+      
+      toast.success('Successfully joined workshop!');
     } catch (error) {
       console.error('Attend workshop error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to attend workshop');
+      toast.error(error instanceof Error ? error.message : 'Failed to join workshop');
     }
   };
 
   const cancelWorkshopAttendance = async (workshopId: string) => {
-    if (!isAuthenticated) {
-      toast.error('Please sign in to manage workshops');
-      return;
-    }
-
     try {
-      const result = await workshopAPI.cancel(workshopId);
+      await workshopAPI.cancelAttendance(workshopId);
       
       // Update local state
-      setUser(result.user);
       setWorkshops(prev => prev.map(w => 
-        w.id === workshopId ? result.workshop : w
+        w.id === workshopId 
+          ? { ...w, currentParticipants: w.currentParticipants - 1, participants: w.participants.filter(p => p.id !== user?.id) }
+          : w
       ));
-      setTransactions(prev => [result.transaction, ...prev]);
       
-      toast.success('Workshop cancelled successfully');
+      // Update user credits
+      if (user) {
+        const workshop = workshops.find(w => w.id === workshopId);
+        if (workshop) {
+          setUser(prev => prev ? { ...prev, credits: prev.credits + workshop.creditCost } : null);
+        }
+      }
+      
+      toast.success('Workshop attendance cancelled');
     } catch (error) {
-      console.error('Cancel workshop error:', error);
+      console.error('Cancel attendance error:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to cancel workshop');
     }
   };

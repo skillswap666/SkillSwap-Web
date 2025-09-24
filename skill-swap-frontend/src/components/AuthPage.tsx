@@ -86,6 +86,7 @@ export function AuthPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
+            {/* [] to change to logo  */}
             <span className="text-white font-bold text-xl">SS</span>
           </div>
           <h1 className="text-2xl font-bold mb-2">Welcome to Skill Swap Club</h1>
@@ -100,6 +101,7 @@ export function AuthPage() {
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
           </TabsList>
 
+          {/* SignIn */}
           <TabsContent value="signin">
             <Card>
               <CardHeader>
@@ -180,6 +182,8 @@ export function AuthPage() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Sign up */}
 
           <TabsContent value="signup">
             <Card>

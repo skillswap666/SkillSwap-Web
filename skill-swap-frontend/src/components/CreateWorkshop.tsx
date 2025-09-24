@@ -27,6 +27,7 @@ import { categories, skillLevels } from '../lib/mock-data';
 export function CreateWorkshop() {
   const { user, setCurrentPage, createWorkshop } = useApp();
   
+  // Workshop form state
   const [formData, setFormData] = useState({
     title: '',
     description: '',
