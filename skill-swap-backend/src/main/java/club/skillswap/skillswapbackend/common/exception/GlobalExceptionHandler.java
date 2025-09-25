@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -46,6 +47,43 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
     }
+
+    /**
+     * 处理我们的通用业务逻辑异常 (DomainException)。
+     * 当 Service 层抛出这个异常时，这个方法会被调用，并返回 400 Bad Request。
+     */
+    @ExceptionHandler(DomainException.class)
+    public ResponseEntity<ErrorResponseDto> handleDomainException(DomainException ex, HttpServletRequest request) {
+        ErrorResponseDto errorResponse = new ErrorResponseDto(
+                Instant.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                ex.getMessage(), // 直接使用异常中定义的消息
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * 新增：处理由 @Valid 注解触发的验证失败异常。
+     * 这会捕获所有 DTO 上的验证错误（如 @NotBlank, @Size 等）。
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponseDto> handleValidationExceptions(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        
+        // 从异常中提取第一个错误信息作为我们的 message
+        String errorMessage = ex.getBindingResult().getAllErrors().get(0).getDefaultMessage();
+
+        ErrorResponseDto errorResponse = new ErrorResponseDto(
+                Instant.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "Validation Failed",
+                errorMessage, // 使用具体的验证错误信息
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
 
     /**
      * 这是一个“安全网”，处理所有其他未被捕获的异常
