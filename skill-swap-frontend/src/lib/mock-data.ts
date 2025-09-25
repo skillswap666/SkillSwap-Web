@@ -1,3 +1,44 @@
+// Featured workshops for Hero page and other components
+export const mockFeaturedWorkshops = [
+  {
+    id: 1,
+    title: "Advanced React Patterns",
+    instructor: "Sarah Chen",
+    date: "Oct 2, 2024",
+    time: "2:00 PM - 4:00 PM",
+    participants: 24,
+    maxParticipants: 30,
+    credits: 3,
+    image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+    skills: ["React", "JavaScript", "Frontend"]
+  },
+  {
+    id: 2,
+    title: "Digital Marketing Fundamentals",
+    instructor: "Marcus Rodriguez",
+    date: "Oct 5, 2024",
+    time: "10:00 AM - 12:00 PM",
+    participants: 18,
+    maxParticipants: 25,
+    credits: 2,
+    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+    skills: ["Marketing", "Analytics", "Strategy"]
+  },
+  {
+    id: 3,
+    title: "Introduction to UX Design",
+    instructor: "Lisa Park",
+    date: "Oct 8, 2024",
+    time: "6:00 PM - 8:00 PM",
+    participants: 15,
+    maxParticipants: 20,
+    credits: 2,
+    image: "https://images.unsplash.com/photo-1561070791-2526d30994b5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
+    skills: ["UX Design", "Research", "Prototyping"]
+  }
+];
+// src/mocks/mockData.ts
+
 import { User, Workshop, CreditTransaction, Review } from '../types';
 
 export const mockUser: User = {
@@ -5,7 +46,8 @@ export const mockUser: User = {
   name: 'Sarah Chen',
   email: 'sarah.chen@example.com',
   credits: 85,
-  avatar: 'https://images.unsplash.com/photo-1494790108755-2616b9349867?w=150&h=150&fit=crop&crop=face',
+  avatar:
+    'https://images.unsplash.com/photo-1494790108755-2616b9349867?w=150&h=150&fit=crop&crop=face',
   bio: 'Product designer passionate about design systems and user research',
   skills: ['UI/UX Design', 'Figma', 'User Research', 'Design Systems'],
   totalWorkshopsHosted: 12,
@@ -21,7 +63,8 @@ export const mockUsers: User[] = [
     name: 'Marcus Johnson',
     email: 'marcus.j@example.com',
     credits: 120,
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+    avatar:
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
     bio: 'Full-stack developer with expertise in React and Node.js',
     skills: ['React', 'Node.js', 'TypeScript', 'GraphQL'],
     totalWorkshopsHosted: 18,
@@ -34,7 +77,8 @@ export const mockUsers: User[] = [
     name: 'Elena Rodriguez',
     email: 'elena.r@example.com',
     credits: 95,
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
+    avatar:
+      'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
     bio: 'Data scientist specializing in machine learning and analytics',
     skills: ['Python', 'Machine Learning', 'Data Analysis', 'SQL'],
     totalWorkshopsHosted: 8,
@@ -47,7 +91,8 @@ export const mockUsers: User[] = [
     name: 'David Kim',
     email: 'david.kim@example.com',
     credits: 65,
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+    avatar:
+      'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
     bio: 'Marketing strategist with focus on digital campaigns',
     skills: ['Digital Marketing', 'SEO', 'Content Strategy', 'Analytics'],
     totalWorkshopsHosted: 6,
@@ -61,7 +106,8 @@ export const mockWorkshops: Workshop[] = [
   {
     id: 'workshop-1',
     title: 'Advanced React Patterns & Performance',
-    description: 'Deep dive into advanced React patterns including render props, compound components, and performance optimization techniques.',
+    description:
+      'Deep dive into advanced React patterns including render props, compound components, and performance optimization techniques.',
     facilitatorId: 'user-2',
     facilitator: mockUsers[1],
     category: 'Development',
@@ -76,7 +122,8 @@ export const mockWorkshops: Workshop[] = [
     location: 'Virtual',
     isOnline: true,
     tags: ['React', 'JavaScript', 'Performance', 'Frontend'],
-    image: 'https://images.unsplash.com/photo-1569693799105-4eb645d89aea?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb2RpbmclMjBwcm9ncmFtbWluZyUyMGxhcHRvcHxlbnwxfHx8fDE3NTg0MjA3Njh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+    image:
+      'https://images.unsplash.com/photo-1569693799105-4eb645d89aea?fit=crop&w=1080&q=80',
     status: 'upcoming',
     participants: [mockUser],
     materials: ['Code repository', 'Slides', 'Practice exercises'],
@@ -85,7 +132,8 @@ export const mockWorkshops: Workshop[] = [
   {
     id: 'workshop-2',
     title: 'Design Systems Workshop',
-    description: 'Learn how to build scalable design systems from scratch, including component libraries and design tokens.',
+    description:
+      'Learn how to build scalable design systems from scratch, including component libraries and design tokens.',
     facilitatorId: 'user-1',
     facilitator: mockUser,
     category: 'Design',
@@ -100,7 +148,8 @@ export const mockWorkshops: Workshop[] = [
     location: 'Creative Hub, Downtown',
     isOnline: false,
     tags: ['Design Systems', 'Figma', 'UI/UX', 'Components'],
-    image: 'https://images.unsplash.com/photo-1611773060335-a3983045bf4e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZXNpZ24lMjB3b3Jrc2hvcCUyMGNyZWF0aXZlfGVufDF8fHx8MTc1ODUyNzI4Nnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+    image:
+      'https://images.unsplash.com/photo-1611773060335-a3983045bf4e?fit=crop&w=1080&q=80',
     status: 'upcoming',
     participants: [mockUsers[1], mockUsers[3]],
     materials: ['Figma templates', 'Component library', 'Guidelines document'],
@@ -109,7 +158,8 @@ export const mockWorkshops: Workshop[] = [
   {
     id: 'workshop-3',
     title: 'Machine Learning for Beginners',
-    description: 'Introduction to machine learning concepts with hands-on Python examples.',
+    description:
+      'Introduction to machine learning concepts with hands-on Python examples.',
     facilitatorId: 'user-3',
     facilitator: mockUsers[2],
     category: 'Data Science',
@@ -124,7 +174,8 @@ export const mockWorkshops: Workshop[] = [
     location: 'Virtual',
     isOnline: true,
     tags: ['Machine Learning', 'Python', 'Data Science', 'AI'],
-    image: 'https://images.unsplash.com/photo-1532622785990-d2c36a76f5a6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkYXRhJTIwc2NpZW5jZSUyMGFuYWx5dGljcyUyMGNvbXB1dGVyfGVufDF8fHx8MTc1ODUyNzI5MHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+    image:
+      'https://images.unsplash.com/photo-1532622785990-d2c36a76f5a6?fit=crop&w=1080&q=80',
     status: 'upcoming',
     participants: [mockUser, mockUsers[3]],
     materials: ['Jupyter notebooks', 'Dataset files', 'Reference materials'],
@@ -133,7 +184,8 @@ export const mockWorkshops: Workshop[] = [
   {
     id: 'workshop-4',
     title: 'Digital Marketing Strategy 2025',
-    description: 'Latest trends and strategies in digital marketing including AI tools and automation.',
+    description:
+      'Latest trends and strategies in digital marketing including AI tools and automation.',
     facilitatorId: 'user-4',
     facilitator: mockUsers[3],
     category: 'Marketing',
@@ -148,7 +200,8 @@ export const mockWorkshops: Workshop[] = [
     location: 'Business Center, Room 205',
     isOnline: false,
     tags: ['Digital Marketing', 'Strategy', 'AI Tools', 'Analytics'],
-    image: 'https://images.unsplash.com/photo-1707301280380-56f7e7a00aef?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHxtYXJrZXRpbmclMjBzdHJhdGVneSUyMGJ1c2luZXNzJTIwbWVldGluZ3xlbnwxfHx8fDE3NTg1MjczNTR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral',
+    image:
+      'https://images.unsplash.com/photo-1707301280380-56f7e7a00aef?fit=crop&w=1080&q=80',
     status: 'upcoming',
     participants: [mockUser, mockUsers[1], mockUsers[2]],
     materials: ['Strategy templates', 'Tool recommendations', 'Case studies'],
@@ -193,7 +246,8 @@ export const mockReviews: Review[] = [
     reviewerId: 'user-2',
     reviewer: mockUsers[1],
     rating: 5,
-    comment: 'Excellent workshop! Sarah\'s explanation of design tokens was incredibly clear.',
+    comment:
+      "Excellent workshop! Sarah's explanation of design tokens was incredibly clear.",
     timestamp: '2024-12-11T15:30:00Z',
   },
   {
@@ -202,7 +256,8 @@ export const mockReviews: Review[] = [
     reviewerId: 'user-4',
     reviewer: mockUsers[3],
     rating: 4,
-    comment: 'Great hands-on experience building components. Would love a follow-up session.',
+    comment:
+      'Great hands-on experience building components. Would love a follow-up session.',
     timestamp: '2024-12-11T16:15:00Z',
   },
 ];

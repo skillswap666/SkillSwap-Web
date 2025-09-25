@@ -1,206 +1,133 @@
-import { createClient } from '@supabase/supabase-js';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
+// lib/api.ts
 
-const supabase = createClient(
-  `https://${projectId}.supabase.co`,
-  publicAnonKey
-);
+import { supabase } from '../utils/supabase';
+import { mockUser, mockUsers, mockWorkshops, mockTransactions } from './mock-data';
 
-const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-d985f1e8`;
-
-// Helper function to create fetch with timeout
-const fetchWithTimeout = async (url: string, options: RequestInit, timeout = 8000) => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-  
-  try {
-    const response = await fetch(url, {
-      ...options,
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-    return response;
-  } catch (error) {
-    clearTimeout(timeoutId);
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('Request timeout');
-    }
-    throw error;
-  }
-};
-
-// Helper function to get authorization headers
-const getAuthHeaders = async () => {
-  try {
-    const { data: { session } } = await supabase.auth.getSession();
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': session?.access_token ? `Bearer ${session.access_token}` : `Bearer ${publicAnonKey}`,
-    };
-  } catch (error) {
-    console.warn('Auth header error, using anon key:', error);
-    return {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${publicAnonKey}`,
-    };
-  }
-};
-
-// Auth functions
+// ----------------------
+// AUTH API
+// ----------------------
 export const authAPI = {
-  signUp: async (name: string, email: string, password: string) => {
-    const response = await fetch(`${API_BASE}/auth/signup`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password }),
+  // Real Google OAuth (works as sign-in & sign-up automatically)
+  signInWithGoogle: async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/home` },
     });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Signup failed');
-    }
-    
-    return response.json();
-  },
-
-  signIn: async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    
     if (error) throw error;
     return data;
   },
 
+  // Mock sign-in (just return the first mock user)
+  signInMock: async () => {
+    return mockUsers[0]; // ✅ always use the first mock user
+  },
+
+  // Mock sign-up (local only, creates a fake user object)
+  signUpMock: async (email: string, name: string) => {
+    const newUser = {
+      id: 'mock-user-' + Date.now(),
+      email,
+      name,
+      avatar: 'https://placehold.co/150x150',
+      credits: 50,
+      bio: '',
+      skills: [],
+      totalWorkshopsHosted: 0,
+      totalWorkshopsAttended: 0,
+      rating: 0,
+      joinedAt: new Date().toISOString(),
+    };
+    mockUsers.push(newUser); // add to in-memory list
+    return newUser;
+  },
+
+  // Sign out (real Supabase)
   signOut: async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    await supabase.auth.signOut();
   },
 
+  // Get current Supabase session + JWT
   getSession: async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    return session;
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+
+    const session = data.session;
+    return {
+      session, // full session object
+      accessToken: session?.access_token ?? null, // 🔑 JWT token
+      user: session?.user ?? null, // basic user info
+    };
   },
 
-  onAuthStateChange: (callback: (event: string, session: any) => void) => {
-    return supabase.auth.onAuthStateChange(callback);
+  // Always return a user (Supabase user if logged in, otherwise first mock user)
+  getUser: async () => {
+    const { session } = await supabase.auth.getSession();
+    if (session?.user) {
+      return session.user;
+    }
+    return mockUsers[0]; // fallback mock user
   },
 };
 
-// User functions
+// ----------------------
+// USER API
+// ----------------------
 export const userAPI = {
-  getProfile: async () => {
-    const headers = await getAuthHeaders();
-    const response = await fetchWithTimeout(`${API_BASE}/user/profile`, {
-      headers,
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to get profile');
-    }
-    
-    return response.json();
-  },
+  // Mock profile (pretend current user is mockUser)
+  getProfile: async () => mockUser,
 
+  // Update profile locally
   updateProfile: async (updates: any) => {
-    const headers = await getAuthHeaders();
-    const response = await fetchWithTimeout(`${API_BASE}/user/profile`, {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify(updates),
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to update profile');
-    }
-    
-    return response.json();
+    Object.assign(mockUser, updates);
+    return { ...mockUser };
   },
 };
 
-// Workshop functions
+// ----------------------
+// WORKSHOP API
+// ----------------------
 export const workshopAPI = {
-  getAll: async () => {
-    try {
-      const response = await fetchWithTimeout(`${API_BASE}/workshops`, {
-        headers: { Authorization: `Bearer ${publicAnonKey}` },
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to get workshops');
+  getAll: async () => mockWorkshops,
+
+  getById: async (id: string) =>
+    mockWorkshops.find((w) => w.id === id) || null,
+
+  create: async (data: any) => {
+    const newWorkshop = {
+      id: 'workshop-' + Date.now(),
+      status: 'upcoming',
+      participants: [],
+      ...data,
+    };
+    mockWorkshops.push(newWorkshop);
+    return newWorkshop;
+  },
+
+  join: async (workshopId: string, userId: string) => {
+    const workshop = mockWorkshops.find((w) => w.id === workshopId);
+    if (workshop) {
+      if (!workshop.participants.some((p) => p.id === userId)) {
+        workshop.participants.push({ id: userId });
       }
-      
-      return response.json();
-    } catch (error) {
-      console.warn('Workshop API call failed, this is expected in demo mode:', error);
-      throw error;
     }
-  },
-
-  create: async (workshopData: any) => {
-    const headers = await getAuthHeaders();
-    const response = await fetchWithTimeout(`${API_BASE}/workshops`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(workshopData),
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to create workshop');
-    }
-    
-    return response.json();
-  },
-
-  attend: async (workshopId: string) => {
-    const headers = await getAuthHeaders();
-    const response = await fetchWithTimeout(`${API_BASE}/workshops/${workshopId}/attend`, {
-      method: 'POST',
-      headers,
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to attend workshop');
-    }
-    
-    return response.json();
-  },
-
-  cancel: async (workshopId: string) => {
-    const headers = await getAuthHeaders();
-    const response = await fetchWithTimeout(`${API_BASE}/workshops/${workshopId}/attend`, {
-      method: 'DELETE',
-      headers,
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to cancel workshop');
-    }
-    
-    return response.json();
+    return workshop;
   },
 };
 
-// Transaction functions
+// ----------------------
+// TRANSACTION API
+// ----------------------
 export const transactionAPI = {
-  getAll: async () => {
-    const headers = await getAuthHeaders();
-    const response = await fetchWithTimeout(`${API_BASE}/transactions`, {
-      headers,
-    });
-    
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to get transactions');
-    }
-    
-    return response.json();
+  getAll: async () => mockTransactions,
+
+  add: async (tx: any) => {
+    const newTx = {
+      id: 'tx-' + Date.now(),
+      timestamp: new Date().toISOString(),
+      ...tx,
+    };
+    mockTransactions.push(newTx);
+    return newTx;
   },
 };
+S

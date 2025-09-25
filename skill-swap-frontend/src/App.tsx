@@ -1,6 +1,7 @@
 import React from 'react';
 import { AppProvider, useApp } from './contexts/AppContext';
 import { Navigation } from './components/Navigation';
+import { HeroPage } from './components/Hero';
 import { HomePage } from './components/HomePage';
 import { ExploreWorkshops } from './components/ExploreWorkshops';
 import { Dashboard } from './components/Dashboard';
@@ -10,7 +11,7 @@ import { AuthPage } from './components/AuthPage';
 import { Toaster } from './components/ui/sonner';
 
 function AppContent() {
-  const { currentPage, isLoading, isDarkMode } = useApp();
+  const { currentPage, isLoading, isDarkMode, isAuthenticated } = useApp();
 
   // Apply theme class to html element
   React.useEffect(() => {
@@ -36,9 +37,11 @@ function AppContent() {
     );
   }
 
-  // Page Switcher , Return HomePage by default
+  // Page Switcher - Return HeroPage by default for non-authenticated users
   const renderPage = () => {
     switch (currentPage) {
+      case 'hero':
+        return <HeroPage />;
       case 'home':
         return <HomePage />;
       case 'explore':
@@ -66,13 +69,17 @@ function AppContent() {
           </div>
         </div>;
       default:
-        return <HomePage />;
+        // Show Hero page for non-authenticated users, Home page for authenticated users
+        return isAuthenticated ? <HomePage /> : <HeroPage />;
     }
   };
 
+  // Show navigation only if not on hero/auth page or if user is authenticated
+  const showNavigation = (currentPage !== 'hero' && currentPage !== 'auth') || isAuthenticated;
+
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
+      {showNavigation && <Navigation />}
       <main>
         {renderPage()}
       </main>

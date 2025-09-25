@@ -1,26 +1,39 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Workshop, CreditTransaction } from '../types';
-import { mockUser, mockWorkshops, mockTransactions } from '../lib/mock-data';
-import { authAPI, userAPI, workshopAPI, transactionAPI } from '../lib/api';
-import { toast } from 'sonner@2.0.3';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { User, Workshop, CreditTransaction } from "../types";
+import {
+  mockUser,
+  mockWorkshops,
+  mockTransactions,
+  mockUsers,
+} from "../lib/mock-data";
+import { supabase } from "../utils/supabase/supabase";
+import { toast } from "sonner";
 
 interface AppContextType {
   user: User | null;
   workshops: Workshop[];
   transactions: CreditTransaction[];
   currentPage: string;
+  authTab: "signin" | "signup";
   isDarkMode: boolean;
   isAuthenticated: boolean;
   isLoading: boolean;
-  setCurrentPage: (page: string) => void;
+  sessionToken: string | null;
+  setCurrentPage: (page: string, authTab?: "signin" | "signup") => void;
   toggleDarkMode: () => void;
   attendWorkshop: (workshopId: string) => Promise<void>;
   cancelWorkshopAttendance: (workshopId: string) => Promise<void>;
   createWorkshop: (workshopData: any) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (name: string, email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshData: () => Promise<void>;
+  clearCache: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -29,256 +42,295 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [workshops, setWorkshops] = useState<Workshop[]>([]);
   const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
-  const [currentPage, setCurrentPage] = useState('home');
+  const [currentPage, setCurrentPageState] = useState("hero");
+  const [authTab, setAuthTab] = useState<"signin" | "signup">("signin");
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
 
-  // Initialize theme from localStorage or system preference
+  // Toggle mock vs real auth easily
+  const USE_SUPABASE = true;
+
+  // --------------------------
+  // Theme Initialization
+  // --------------------------
   useEffect(() => {
-    const savedTheme = localStorage.getItem('skill-swap-theme');
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    if (savedTheme === 'dark' || (savedTheme === null && systemPrefersDark)) {
+    const savedTheme = localStorage.getItem("skill-swap-theme");
+    const systemPrefersDark = window.matchMedia(
+      "(prefers-color-scheme: dark)"
+    ).matches;
+
+    if (savedTheme === "dark" || (savedTheme === null && systemPrefersDark)) {
       setIsDarkMode(true);
-      document.documentElement.classList.add('dark');
-      document.documentElement.classList.remove('light');
+      document.documentElement.classList.add("dark");
+      document.documentElement.classList.remove("light");
     } else {
       setIsDarkMode(false);
-      document.documentElement.classList.add('light');
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add("light");
+      document.documentElement.classList.remove("dark");
     }
   }, []);
 
-  // Check for existing session on load
+  // --------------------------
+  // Auth Initialization
+  // --------------------------
   useEffect(() => {
-    checkAuthState();
+    if (USE_SUPABASE) {
+      checkSupabaseAuthState();
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange((_event, session) => {
+        if (session) {
+          console.log("🔑 Auth state changed: logged in", session.user);
+          setUser(mapSupabaseUser(session.user));
+          setIsAuthenticated(true);
+          setCurrentPage("home");
+        } else {
+          console.log("🚪 Auth state changed: logged out");
+          setUser(null);
+          setIsAuthenticated(false);
+          setCurrentPage("hero");
+        }
+      });
+      return () => subscription.unsubscribe();
+    } else {
+      checkMockAuthState();
+    }
   }, []);
 
-  const checkAuthState = async () => {
-    try {
-      const session = await authAPI.getSession();
-      if (session) {
-        await loadUserData();
-      } else {
-        // Load workshops even for unauthenticated users
-        await loadWorkshops();
-        // Use mock user for demo purposes
-        setUser(mockUser);
-        setTransactions(mockTransactions);
-        setIsAuthenticated(false);
-      }
-    } catch (error) {
-      console.error('Auth check error:', error);
-      // Fallback to mock data for demo
-      setUser(mockUser);
+  // --------------------------
+  // Helpers
+  // --------------------------
+  const mapSupabaseUser = (sbUser: any): User => ({
+    ...mockUser, // fallback defaults
+    id: sbUser.id,
+    email: sbUser.email ?? "",
+    name: sbUser.user_metadata?.full_name ?? sbUser.email?.split("@")[0],
+    avatar: sbUser.user_metadata?.avatar_url ?? mockUser.avatar,
+  });
+
+  const checkSupabaseAuthState = async () => {
+    console.log("🔍 Checking Supabase session...");
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      setUser(mapSupabaseUser(data.session.user));
       setWorkshops(mockWorkshops);
       setTransactions(mockTransactions);
-      setIsAuthenticated(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loadUserData = async () => {
-    try {
-      const [profileRes, transactionsRes] = await Promise.all([
-        userAPI.getProfile(),
-        transactionAPI.getAll()
-      ]);
-      
-      setUser(profileRes.user);
-      setTransactions(transactionsRes.transactions);
       setIsAuthenticated(true);
-      
-      await loadWorkshops();
-    } catch (error) {
-      console.error('Load user data error:', error);
-      toast.error('Failed to load user data');
+      setSessionToken(data.session.access_token || null);
+      localStorage.setItem("skill-swap-sessionToken", data.session.access_token || "");
+      setCurrentPage("home");
+    } else {
+      setSessionToken(null);
+      localStorage.removeItem("skill-swap-sessionToken");
+      setCurrentPage("hero");
     }
+    setIsLoading(false);
   };
 
-  const loadWorkshops = async () => {
-    try {
-      const { workshops: workshopData } = await workshopAPI.getAll();
-      setWorkshops(workshopData);
-    } catch (error) {
-      console.error('Load workshops error:', error);
-      // Fallback to mock data
-      setWorkshops(mockWorkshops);
+  const checkMockAuthState = () => {
+    console.log("🔍 Checking mock auth...");
+    const savedAuth = localStorage.getItem("skill-swap-auth");
+    const savedUser = localStorage.getItem("skill-swap-user");
+    const savedToken = localStorage.getItem("skill-swap-sessionToken");
+    if (savedAuth === "true" && savedUser) {
+      try {
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
+        setWorkshops(mockWorkshops);
+        setTransactions(mockTransactions);
+        setIsAuthenticated(true);
+        setSessionToken(savedToken || null);
+        setCurrentPage("home");
+      } catch {
+        localStorage.removeItem("skill-swap-auth");
+        localStorage.removeItem("skill-swap-user");
+        localStorage.removeItem("skill-swap-sessionToken");
+        setSessionToken(null);
+        setCurrentPage("hero");
+      }
+    } else {
+      setSessionToken(null);
+      setCurrentPage("hero");
     }
+    setIsLoading(false);
   };
 
+  // --------------------------
+  // Cache
+  // --------------------------
+  const clearCache = () => {
+    console.log("🧹 Clearing cache...");
+    localStorage.clear();
+    sessionStorage.clear();
+    setUser(null);
+    setWorkshops([]);
+    setTransactions([]);
+    setIsAuthenticated(false);
+    setCurrentPage("hero");
+    toast.success("Cache cleared! Refreshing...");
+    setTimeout(() => window.location.reload(), 1000);
+  };
+
+  // --------------------------
+  // Navigation
+  // --------------------------
+  const setCurrentPage = (page: string, authTabOption?: "signin" | "signup") => {
+    setCurrentPageState(page);
+    if (authTabOption) setAuthTab(authTabOption);
+  };
+
+  // --------------------------
+  // Data
+  // --------------------------
   const refreshData = async () => {
-    if (isAuthenticated) {
-      await loadUserData();
-    } else {
-      await loadWorkshops();
-    }
+    setWorkshops(mockWorkshops);
+    setTransactions(mockTransactions);
   };
 
-  const toggleDarkMode = () => {
-    const newDarkMode = !isDarkMode;
-    setIsDarkMode(newDarkMode);
-    localStorage.setItem('skill-swap-theme', newDarkMode ? 'dark' : 'light');
-    
-    if (newDarkMode) {
-      document.documentElement.classList.add('dark');
-      document.documentElement.classList.remove('light');
-    } else {
-      document.documentElement.classList.add('light');
-      document.documentElement.classList.remove('dark');
-    }
-  };
-
+  // --------------------------
+  // Auth Actions
+  // --------------------------
   const signIn = async (email: string, password: string) => {
-    try {
-      const result = await authAPI.signIn(email, password);
-      if (result.success) {
-        await loadUserData();
-        setCurrentPage('dashboard');
-        toast.success('Signed in successfully!');
-      } else {
-        throw new Error(result.message || 'Sign in failed');
-      }
-    } catch (error) {
-      console.error('Sign in error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to sign in');
-      throw error;
+    if (USE_SUPABASE) {
+      console.log("🔐 Supabase login via Google should be handled separately");
+      toast.info("Use Google login button for Supabase auth");
+      return;
     }
-  };
 
-  const signUp = async (name: string, email: string, password: string) => {
-    try {
-      const result = await authAPI.signUp(name, email, password);
-      if (result.success) {
-        await loadUserData();
-        setCurrentPage('dashboard');
-        toast.success('Account created successfully!');
-      } else {
-        throw new Error(result.message || 'Sign up failed');
-      }
-    } catch (error) {
-      console.error('Sign up error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to create account');
-      throw error;
+    // --- Mock Sign-In ---
+    console.log("🔐 Mock sign in with email:", email);
+    if (["demo", "password", "123456"].includes(password)) {
+      let userData =
+        mockUsers.find(
+          (u) => u.email.toLowerCase() === email.toLowerCase()
+        ) ?? {
+          ...mockUser,
+          email,
+          name: email
+            .split("@")[0]
+            .replace(/[._]/g, " ")
+            .replace(/\b\w/g, (l) => l.toUpperCase()),
+        };
+      const mockToken = `mock-token-${Date.now()}`;
+      setUser(userData);
+      setWorkshops(mockWorkshops);
+      setTransactions(mockTransactions);
+      setIsAuthenticated(true);
+      setSessionToken(mockToken);
+      localStorage.setItem("skill-swap-auth", "true");
+      localStorage.setItem("skill-swap-user", JSON.stringify(userData));
+      localStorage.setItem("skill-swap-sessionToken", mockToken);
+      setCurrentPage("home");
+      toast.success(`Welcome back, ${userData.name}!`);
+    } else {
+      throw new Error("Invalid email or password. Try password: demo");
     }
   };
 
   const signOut = async () => {
-    try {
-      await authAPI.signOut();
-      setUser(null);
-      setWorkshops([]);
-      setTransactions([]);
-      setIsAuthenticated(false);
-      setCurrentPage('home');
-      toast.success('Signed out successfully');
-    } catch (error) {
-      console.error('Sign out error:', error);
-      toast.error('Failed to sign out');
+    if (USE_SUPABASE) {
+      await supabase.auth.signOut();
     }
+  setUser(null);
+  setWorkshops([]);
+  setTransactions([]);
+  setIsAuthenticated(false);
+  setSessionToken(null);
+  localStorage.removeItem("skill-swap-auth");
+  localStorage.removeItem("skill-swap-user");
+  localStorage.removeItem("skill-swap-sessionToken");
+  setCurrentPage("hero");
+  toast.success("Signed out successfully");
   };
 
+  // --------------------------
+  // Workshop Actions (mock only)
+  // --------------------------
   const attendWorkshop = async (workshopId: string) => {
-    if (!isAuthenticated) {
-      toast.error('Please sign in to attend workshops');
-      setCurrentPage('auth');
+    if (!isAuthenticated || !user) {
+      toast.error("Please sign in to attend workshops");
       return;
     }
-
-    try {
-      const result = await workshopAPI.attend(workshopId);
-      
-      // Update local state
-      setWorkshops(prev => prev.map(w => 
-        w.id === workshopId 
-          ? { ...w, currentParticipants: w.currentParticipants + 1, participants: [...w.participants, user!] }
+    setWorkshops((prev) =>
+      prev.map((w) =>
+        w.id === workshopId
+          ? {
+              ...w,
+              currentParticipants: w.currentParticipants + 1,
+              participants: [...w.participants, user],
+            }
           : w
-      ));
-      
-      // Update user credits
-      if (user) {
-        const workshop = workshops.find(w => w.id === workshopId);
-        if (workshop) {
-          setUser(prev => prev ? { ...prev, credits: prev.credits - workshop.creditCost } : null);
-        }
-      }
-      
-      toast.success('Successfully joined workshop!');
-    } catch (error) {
-      console.error('Attend workshop error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to join workshop');
-    }
+      )
+    );
+    toast.success("Joined workshop!");
   };
 
   const cancelWorkshopAttendance = async (workshopId: string) => {
-    try {
-      await workshopAPI.cancelAttendance(workshopId);
-      
-      // Update local state
-      setWorkshops(prev => prev.map(w => 
-        w.id === workshopId 
-          ? { ...w, currentParticipants: w.currentParticipants - 1, participants: w.participants.filter(p => p.id !== user?.id) }
+    if (!isAuthenticated || !user) return;
+    setWorkshops((prev) =>
+      prev.map((w) =>
+        w.id === workshopId
+          ? {
+              ...w,
+              currentParticipants: w.currentParticipants - 1,
+              participants: w.participants.filter((p) => p.id !== user.id),
+            }
           : w
-      ));
-      
-      // Update user credits
-      if (user) {
-        const workshop = workshops.find(w => w.id === workshopId);
-        if (workshop) {
-          setUser(prev => prev ? { ...prev, credits: prev.credits + workshop.creditCost } : null);
-        }
-      }
-      
-      toast.success('Workshop attendance cancelled');
-    } catch (error) {
-      console.error('Cancel attendance error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to cancel workshop');
-    }
+      )
+    );
+    toast.success("Workshop attendance cancelled");
   };
 
   const createWorkshop = async (workshopData: any) => {
-    if (!isAuthenticated) {
-      toast.error('Please sign in to create workshops');
-      setCurrentPage('auth');
+    if (!isAuthenticated || !user) {
+      toast.error("Please sign in to create workshops");
       return;
     }
-
-    try {
-      const result = await workshopAPI.create(workshopData);
-      
-      // Add to local state
-      setWorkshops(prev => [result.workshop, ...prev]);
-      
-      toast.success('Workshop created successfully!');
-      setCurrentPage('dashboard');
-    } catch (error) {
-      console.error('Create workshop error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to create workshop');
-      throw error;
-    }
+    const newWorkshop: Workshop = {
+      id: `workshop-${Date.now()}`,
+      ...workshopData,
+      facilitatorId: user.id,
+      facilitator: user,
+      currentParticipants: 0,
+      participants: [],
+      status: "upcoming",
+    };
+    setWorkshops((prev) => [newWorkshop, ...prev]);
+    toast.success("Workshop created!");
+    setCurrentPage("dashboard");
   };
 
   return (
-    <AppContext.Provider value={{
-      user,
-      workshops,
-      transactions,
-      currentPage,
-      isDarkMode,
-      isAuthenticated,
-      isLoading,
-      setCurrentPage,
-      toggleDarkMode,
-      attendWorkshop,
-      cancelWorkshopAttendance,
-      createWorkshop,
-      signIn,
-      signUp,
-      signOut,
-      refreshData,
-    }}>
+    <AppContext.Provider
+      value={{
+        user,
+        workshops,
+        transactions,
+        currentPage,
+        authTab,
+        isDarkMode,
+        isAuthenticated,
+        isLoading,
+        sessionToken,
+        setCurrentPage,
+        toggleDarkMode: () => {
+          const newMode = !isDarkMode;
+          setIsDarkMode(newMode);
+          localStorage.setItem("skill-swap-theme", newMode ? "dark" : "light");
+          document.documentElement.classList.toggle("dark", newMode);
+          document.documentElement.classList.toggle("light", !newMode);
+        },
+        attendWorkshop,
+        cancelWorkshopAttendance,
+        createWorkshop,
+        signIn,
+        signOut,
+        refreshData,
+        clearCache,
+      }}
+    >
       {children}
     </AppContext.Provider>
   );
@@ -287,7 +339,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 export const useApp = () => {
   const context = useContext(AppContext);
   if (context === undefined) {
-    throw new Error('useApp must be used within an AppProvider');
+    throw new Error("useApp must be used within an AppProvider");
   }
   return context;
 };

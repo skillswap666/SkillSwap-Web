@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { supabase } from '../utils/supabase/supabase';
 import { useApp } from '../contexts/AppContext';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -10,24 +11,25 @@ import {
   UserPlus, 
   Mail, 
   Lock, 
-  User,
   Eye,
-  EyeOff
+  EyeOff,
+  ArrowLeft
 } from 'lucide-react';
+import { GoogleIcon } from './ui/google-icon';
 
 export function AuthPage() {
-  const { signIn, signUp, isLoading } = useApp();
+  const { setCurrentPage } = useApp();
   const [showPassword, setShowPassword] = useState(false);
-  
-  // Sign In Form
+  const [loading, setLoading] = useState(false);
+
+  // Sign In state
   const [signInData, setSignInData] = useState({
     email: '',
     password: '',
   });
 
-  // Sign Up Form
+  // Sign Up state
   const [signUpData, setSignUpData] = useState({
-    name: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -35,63 +37,71 @@ export function AuthPage() {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      await signIn(signInData.email, signInData.password);
-    } catch (error) {
-      // Error is handled in the context
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: signInData.email,
+      password: signInData.password,
+    });
+    if (error) {
+      alert(error.message);
     }
+    setLoading(false);
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (signUpData.password !== signUpData.confirmPassword) {
       alert('Passwords do not match');
       return;
     }
-
-    if (signUpData.password.length < 6) {
-      alert('Password must be at least 6 characters');
-      return;
+    setLoading(true);
+    const { error } = await supabase.auth.signUp({
+      email: signUpData.email,
+      password: signUpData.password,
+    });
+    if (error) {
+      alert(error.message);
+    } else {
+      alert('Check your email for a confirmation link');
     }
+    setLoading(false);
+  };
 
+  const handleGoogleAuth = async () => {
     try {
-      await signUp(signUpData.name, signUpData.email, signUpData.password);
-    } catch (error) {
-      // Error is handled in the context
-    }
-  };
-
-  const updateSignInData = (field: string, value: string) => {
-    setSignInData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const updateSignUpData = (field: string, value: string) => {
-    setSignUpData(prev => ({ ...prev, [field]: value }));
-  };
-
-  // Demo account button
-  const handleDemoSignIn = async () => {
-    try {
-      await signIn('demo@skillswapclub.com', 'demo123');
-    } catch (error) {
-      // If demo account doesn't exist, we'll stay in demo mode
-      console.log('Demo account not found, continuing with mock data');
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.origin + '/home' },
+      });
+      if (error) alert(error.message);
+    } catch (err) {
+      console.error('Google sign-in error:', err);
     }
   };
 
   return (
     <div className="min-h-screen bg-background pt-20 lg:pt-24">
       <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Back Button */}
+        <div className="mb-6">
+          <Button
+            variant="ghost"
+            onClick={() => setCurrentPage('hero')}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Home
+          </Button>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
-            {/* [] to change to logo  */}
             <span className="text-white font-bold text-xl">SS</span>
           </div>
           <h1 className="text-2xl font-bold mb-2">Welcome to Skill Swap Club</h1>
           <p className="text-muted-foreground">
-            Join our community to learn new skills and share your expertise
+            Sign in or create an account to continue
           </p>
         </div>
 
@@ -101,7 +111,7 @@ export function AuthPage() {
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
           </TabsList>
 
-          {/* SignIn */}
+          {/* Sign In */}
           <TabsContent value="signin">
             <Card>
               <CardHeader>
@@ -113,50 +123,53 @@ export function AuthPage() {
               <CardContent>
                 <form onSubmit={handleSignIn} className="space-y-4">
                   <div>
-                    <Label htmlFor="signin-email">Email</Label>
+                    <Label>Email</Label>
                     <div className="relative mt-1">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                       <Input
-                        id="signin-email"
                         type="email"
                         placeholder="your.email@example.com"
                         value={signInData.email}
-                        onChange={(e) => updateSignInData('email', e.target.value)}
+                        onChange={(e) =>
+                          setSignInData({ ...signInData, email: e.target.value })
+                        }
                         className="pl-10"
                         required
                       />
                     </div>
                   </div>
-
                   <div>
-                    <Label htmlFor="signin-password">Password</Label>
+                    <Label>Password</Label>
                     <div className="relative mt-1">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                       <Input
-                        id="signin-password"
                         type={showPassword ? 'text' : 'password'}
                         placeholder="Your password"
                         value={signInData.password}
-                        onChange={(e) => updateSignInData('password', e.target.value)}
+                        onChange={(e) =>
+                          setSignInData({
+                            ...signInData,
+                            password: e.target.value,
+                          })
+                        }
                         className="pl-10 pr-10"
                         required
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                       >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
                   </div>
-
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Signing In...' : 'Sign In'}
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? 'Signing In...' : 'Sign In'}
                   </Button>
                 </form>
 
@@ -166,25 +179,27 @@ export function AuthPage() {
                       <div className="w-full border-t border-border" />
                     </div>
                     <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-background text-muted-foreground">Or try demo</span>
+                      <span className="px-2 bg-background text-muted-foreground">
+                        Or continue with
+                      </span>
                     </div>
                   </div>
 
-                  <Button 
-                    variant="outline" 
-                    className="w-full mt-4"
-                    onClick={handleDemoSignIn}
-                    disabled={isLoading}
+                  <Button
+                    variant="outline"
+                    className="w-full mt-4 flex items-center justify-center gap-2"
+                    onClick={handleGoogleAuth}
+                    disabled={loading}
                   >
-                    Continue with Demo Account
+                    <GoogleIcon className="w-5 h-5" />
+                    Google
                   </Button>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Sign up */}
-
+          {/* Sign Up */}
           <TabsContent value="signup">
             <Card>
               <CardHeader>
@@ -196,101 +211,84 @@ export function AuthPage() {
               <CardContent>
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div>
-                    <Label htmlFor="signup-name">Full Name</Label>
+                    <Label>Email</Label>
                     <div className="relative mt-1">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                       <Input
-                        id="signup-name"
-                        type="text"
-                        placeholder="Your full name"
-                        value={signUpData.name}
-                        onChange={(e) => updateSignUpData('name', e.target.value)}
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="signup-email">Email</Label>
-                    <div className="relative mt-1">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                      <Input
-                        id="signup-email"
                         type="email"
                         placeholder="your.email@example.com"
                         value={signUpData.email}
-                        onChange={(e) => updateSignUpData('email', e.target.value)}
+                        onChange={(e) =>
+                          setSignUpData({ ...signUpData, email: e.target.value })
+                        }
                         className="pl-10"
                         required
                       />
                     </div>
                   </div>
-
                   <div>
-                    <Label htmlFor="signup-password">Password</Label>
+                    <Label>Password</Label>
                     <div className="relative mt-1">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                       <Input
-                        id="signup-password"
                         type={showPassword ? 'text' : 'password'}
                         placeholder="Choose a password"
                         value={signUpData.password}
-                        onChange={(e) => updateSignUpData('password', e.target.value)}
+                        onChange={(e) =>
+                          setSignUpData({
+                            ...signUpData,
+                            password: e.target.value,
+                          })
+                        }
                         className="pl-10 pr-10"
                         required
-                        minLength={6}
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                       >
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        {showPassword ? (
+                          <EyeOff className="w-4 h-4" />
+                        ) : (
+                          <Eye className="w-4 h-4" />
+                        )}
                       </button>
                     </div>
                   </div>
-
                   <div>
-                    <Label htmlFor="signup-confirm-password">Confirm Password</Label>
-                    <div className="relative mt-1">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                      <Input
-                        id="signup-confirm-password"
-                        type={showPassword ? 'text' : 'password'}
-                        placeholder="Confirm your password"
-                        value={signUpData.confirmPassword}
-                        onChange={(e) => updateSignUpData('confirmPassword', e.target.value)}
-                        className="pl-10"
-                        required
-                      />
-                    </div>
+                    <Label>Confirm Password</Label>
+                    <Input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Confirm your password"
+                      value={signUpData.confirmPassword}
+                      onChange={(e) =>
+                        setSignUpData({
+                          ...signUpData,
+                          confirmPassword: e.target.value,
+                        })
+                      }
+                      required
+                    />
                   </div>
-
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Creating Account...' : 'Create Account'}
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? 'Creating Account...' : 'Create Account'}
                   </Button>
                 </form>
 
-                <div className="mt-4">
-                  <p className="text-xs text-muted-foreground text-center">
-                    By creating an account, you get 50 free credits to start attending workshops!
-                  </p>
-                </div>
+                <Button
+                  variant="outline"
+                  className="w-full mt-4 flex items-center justify-center gap-2"
+                  onClick={handleGoogleAuth}
+                  disabled={loading}
+                >
+                  <GoogleIcon className="w-5 h-5" />
+                  Sign up with Google
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
-
-        <div className="mt-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            Join thousands of learners and experts in our skill-sharing community
-          </p>
-        </div>
       </div>
     </div>
   );
