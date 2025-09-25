@@ -1,4 +1,4 @@
-package club.skillswap.skillswapbackend.entity;
+package club.skillswap.skillswapbackend.user.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;

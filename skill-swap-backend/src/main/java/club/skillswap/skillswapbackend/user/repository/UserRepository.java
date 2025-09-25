@@ -1,8 +1,9 @@
-package club.skillswap.skillswapbackend.repository;
+package club.skillswap.skillswapbackend.user.repository;
 
-import club.skillswap.skillswapbackend.entity.UserAccount;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+
+import club.skillswap.skillswapbackend.user.entity.UserAccount;
 
 import java.util.UUID;
 import java.util.Optional;

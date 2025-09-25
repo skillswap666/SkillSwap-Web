@@ -1,4 +1,4 @@
-package club.skillswap.skillswapbackend.entity;
+package club.skillswap.skillswapbackend.user.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -6,9 +6,10 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "user_account")
@@ -37,10 +38,8 @@ public class UserAccount {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    // --- 建立与其他实体的关联 ---
-
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserSkill> skills;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<UserSkill> skills = new ArrayList<>();
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     @PrimaryKeyJoinColumn
