@@ -1,6 +1,6 @@
 ## **User-api Endpoints**
 
-This document outlines the available API endpoints for the Skill Swap Club backend, focusing on Authentication and User Profiles.
+This document outlines the available API endpoints for the Skill Swap Club backend, focusing on User Profiles.
 
 **Base URL:** `http://localhost:8080`
 

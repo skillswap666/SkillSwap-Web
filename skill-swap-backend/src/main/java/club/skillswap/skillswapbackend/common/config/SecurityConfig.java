@@ -4,7 +4,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -39,6 +38,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // 允许任何人 GET 公开的用户信息
                 .requestMatchers(HttpMethod.GET, "/api/v1/users/{id}").permitAll()
+                // **规则2 (新增的): 允许任何人 GET 公开的 Workshop 信息**
+                .requestMatchers(HttpMethod.GET, "/api/v1/workshops", "/api/v1/workshops/**").permitAll()
                 // 其他所有请求都需要有效的 JWT 认证
                 .anyRequest().authenticated()
             );

@@ -74,6 +74,9 @@ public class GlobalExceptionHandler {
         // 从异常中提取第一个错误信息作为我们的 message
         String errorMessage = ex.getBindingResult().getAllErrors().get(0).getDefaultMessage();
 
+        System.err.println("An unexpected error occurred: ");
+        ex.printStackTrace();
+
         ErrorResponseDto errorResponse = new ErrorResponseDto(
                 Instant.now(),
                 HttpStatus.BAD_REQUEST.value(),
