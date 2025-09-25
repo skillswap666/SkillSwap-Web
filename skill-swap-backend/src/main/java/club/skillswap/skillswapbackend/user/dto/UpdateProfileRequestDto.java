@@ -1,4 +1,4 @@
-package club.skillswap.skillswapbackend.dto;
+package club.skillswap.skillswapbackend.user.dto;
 
 import lombok.Data;
 

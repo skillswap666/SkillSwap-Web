@@ -1,4 +1,4 @@
-package club.skillswap.skillswapbackend.entity;
+package club.skillswap.skillswapbackend.user.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

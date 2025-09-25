@@ -1,4 +1,4 @@
-package club.skillswap.skillswapbackend.service;
+package club.skillswap.skillswapbackend.user.service;
 
 
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -6,10 +6,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.apache.commons.lang3.RandomStringUtils;
 
-import club.skillswap.skillswapbackend.dto.UpdateProfileRequestDto;
-import club.skillswap.skillswapbackend.entity.UserAccount;
-import club.skillswap.skillswapbackend.repository.UserRepository;
-import club.skillswap.skillswapbackend.exception.ResourceNotFoundException;
+import club.skillswap.skillswapbackend.common.exception.ResourceNotFoundException;
+import club.skillswap.skillswapbackend.user.dto.UpdateProfileRequestDto;
+import club.skillswap.skillswapbackend.user.entity.UserAccount;
+import club.skillswap.skillswapbackend.user.repository.UserRepository;
 
 import java.util.Optional;
 import java.util.UUID;

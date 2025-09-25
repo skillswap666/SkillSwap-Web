@@ -1,9 +1,10 @@
-package club.skillswap.skillswapbackend.controller;
+package club.skillswap.skillswapbackend.user.controller;
 
-import club.skillswap.skillswapbackend.dto.UpdateProfileRequestDto;
-import club.skillswap.skillswapbackend.dto.UserProfileDto;
-import club.skillswap.skillswapbackend.entity.UserAccount;
-import club.skillswap.skillswapbackend.service.UserService;
+import club.skillswap.skillswapbackend.user.dto.UpdateProfileRequestDto;
+import club.skillswap.skillswapbackend.user.dto.UserProfileDto;
+import club.skillswap.skillswapbackend.user.entity.UserAccount;
+import club.skillswap.skillswapbackend.user.service.UserService;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;

@@ -1,4 +1,4 @@
-package club.skillswap.skillswapbackend.config;
+package club.skillswap.skillswapbackend.common.config;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;

@@ -1,4 +1,4 @@
-package club.skillswap.skillswapbackend.entity;
+package club.skillswap.skillswapbackend.common.audit;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -6,6 +6,8 @@ import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+
+import club.skillswap.skillswapbackend.user.entity.UserAccount;
 
 import java.time.Instant;
 

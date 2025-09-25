@@ -1,4 +1,4 @@
-package club.skillswap.skillswapbackend.controller;
+package club.skillswap.skillswapbackend.admin.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
