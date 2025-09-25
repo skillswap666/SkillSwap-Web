@@ -1,10 +1,11 @@
-package club.skillswap.skillswapbackend.dto;
+package club.skillswap.skillswapbackend.user.dto;
 
-import club.skillswap.skillswapbackend.entity.UserAccount;
 import lombok.Data;
 
 import java.time.Instant;
 import java.util.UUID;
+
+import club.skillswap.skillswapbackend.user.entity.UserAccount;
 
 @Data
 public class UserProfileDto {
