@@ -32,16 +32,21 @@ For every request to our backend API (`http://localhost:8080`) that requires aut
 
 ```json
 {
-  "title": "Intro to Java Spring Boot",
-  "description": "Learn the basics of building REST APIs with Spring Boot.",
-  "category": "Web Development",
+  "title": "My First Awesome Workshop",
+  "description": "Learning how to build amazing REST APIs.",
+  "category": "Backend Development",
   "skillLevel": "Beginner",
-  "date": "2025-10-15",
-  "time": "18:00:00",
+  "duration": 90,
+  "maxParticipants": 15,
+  "creditCost": 10,
+  "creditReward": 20,
+  "date": "2025-11-10",
+  "time": "19:00:00",
+  "location": ["Online"],
   "isOnline": true,
-  "location": "Virtual",
-  "maxParticipants": 20,
-  "creditCost": 10
+  "tags": ["Java", "Spring Boot", "API"],
+  "materials": ["Slides PDF", "GitHub Repo Link"],
+  "requirements": ["Basic Java knowledge"]
 }
 ```
 
@@ -51,19 +56,26 @@ The server will respond with the complete object of the newly created workshop.
 
 ```json
 {
-    "id": 1,
-    "title": "Intro to Java Spring Boot",
-    "description": "Learn the basics of building REST APIs with Spring Boot.",
-    "category": "Web Development",
+    "id": "w_1",
+    "title": "My First Awesome Workshop",
+    "description": "Learning how to build amazing REST APIs.",
+    "category": "Backend Development",
     "skillLevel": "Beginner",
     "status": "upcoming",
-    "date": "2025-10-15",
-    "time": "18:00:00",
+    "date": "2025-11-10",
+    "time": "19:00:00",
     "isOnline": true,
-    "location": "Virtual",
-    "maxParticipants": 20,
-    "creditCost": 10,
-    "facilitatorName": "lichenyang_christy"
+    "location": [
+        "Online"
+    ],
+    "maxParticipants": 15,
+    "creditReward": 20,
+    "facilitator": {
+        "id": "u_932c2a5d-14f8-4fd5-bc6a-85db34035d4b",
+        "name": "lichenyang_christy_cJOy",
+        "avatar": "null"
+    },
+    "createdAt": "2025-09-27T00:28:57.3057653"
 }
 ```
 
@@ -102,19 +114,26 @@ The server will respond with the complete object of the newly created workshop.
 
 ```json
 {
-    "id": 1,
-    "title": "Intro to Java Spring Boot",
-    "description": "Learn the basics of building REST APIs with Spring Boot.",
-    "category": "Web Development",
+    "id": "w_1",
+    "title": "My First Awesome Workshop",
+    "description": "Learning how to build amazing REST APIs.",
+    "category": "Backend Development",
     "skillLevel": "Beginner",
     "status": "upcoming",
-    "date": "2025-10-15",
-    "time": "18:00:00",
+    "date": "2025-11-10",
+    "time": "19:00:00",
     "isOnline": true,
-    "location": "Virtual",
-    "maxParticipants": 20,
-    "creditCost": 10,
-    "facilitatorName": "lichenyang_christy"
+    "location": [
+        "Online"
+    ],
+    "maxParticipants": 15,
+    "creditReward": 20,
+    "facilitator": {
+        "id": "u_932c2a5d-14f8-4fd5-bc6a-85db34035d4b",
+        "name": "lichenyang_christy_cJOy",
+        "avatar": "null"
+    },
+    "createdAt": "2025-09-27T00:28:57.305765"
 }
 ```
 
@@ -152,33 +171,81 @@ The server will respond with a JSON array of workshop objects.
 ```json
 [
     {
-        "id": 1,
-        "title": "Intro to Java Spring Boot",
-        "description": "Learn the basics of building REST APIs with Spring Boot.",
-        "category": "Web Development",
+        "id": "w_1",
+        "title": "My First Awesome Workshop",
+        "description": "Learning how to build amazing REST APIs.",
+        "category": "Backend Development",
         "skillLevel": "Beginner",
         "status": "upcoming",
-        "date": "2025-10-15",
-        "time": "18:00:00",
+        "date": "2025-11-10",
+        "time": "19:00:00",
         "isOnline": true,
-        "location": "Virtual",
-        "maxParticipants": 20,
-        "creditCost": 10,
-        "facilitatorName": "lichenyang_christy"
-    },
-    {
-        "id": 2,
-        "title": "Advanced React Patterns",
-        "description": "A deep dive into hooks, context, and performance optimization.",
-        "category": "Web Development",
-        "skillLevel": "Advanced",
-        "status": "upcoming",
-        "date": "2025-11-02",
-        "time": "14:00:00",
-        "isOnline": false,
-        "location": "Community Tech Hub",
+        "location": [
+            "Online"
+        ],
         "maxParticipants": 15,
-        "creditCost": 25,
-        "facilitatorName": "another_user"
+        "creditReward": 20,
+        "facilitator": {
+            "id": "u_932c2a5d-14f8-4fd5-bc6a-85db34035d4b",
+            "name": "lichenyang_christy_cJOy",
+            "avatar": "null"
+        },
+        "createdAt": "2025-09-27T00:28:57.305765"
     }
-]```
+]
+```
+
+---
+
+#### **Delete Workshop**
+
+* `DELETE /api/v1/workshops/{id}`
+* **Description**: Deletes a specific workshop. Only the workshop’s **facilitator (creator)** or a user with **admin privileges** can perform this action.
+  When deletion is successful, the server responds with a confirmation message.
+* **Authorization**: **Required.**
+
+  * The request must include a valid authentication token (e.g., Bearer JWT).
+  * The authenticated user must either be:
+
+    * The facilitator who created the workshop, **or**
+    * An admin user.
+
+**Test Method:**
+
+1. **URL**: `http://localhost:8080/api/v1/workshops/{id}`
+
+   * Replace `{id}` with the numeric workshop ID (e.g., `1`).
+2. **Method**: `DELETE`
+3. **Authorization**:
+
+   * **Type**: Bearer Token
+   * **Token**: Valid access token of an admin user or the workshop facilitator.
+
+**Success Response (`200 OK`)**
+
+If the deletion succeeds, the server returns a JSON object confirming the deletion.
+
+```json
+{
+    "message": "delete success"
+}
+```
+
+**Error Responses**
+
+| Status Code        | Reason                                                                                            |
+| ------------------ | ------------------------------------------------------------------------------------------------- |
+| `401 Unauthorized` | The request does not include a valid authentication token.                                        |
+| `403 Forbidden`    | The user is not the facilitator of this workshop and is not an admin.                             |
+| `404 Not Found`    | No workshop exists with the provided ID.                                                          |
+| `409 Conflict`     | The workshop cannot be deleted because related records (e.g., participants, reviews) still exist. |
+
+**Example**
+
+```bash
+curl -X DELETE \
+  http://localhost:8080/api/v1/workshops/1 \
+  -H "Authorization: Bearer <your_access_token>"
+```
+
+This request deletes the workshop with ID `1` if the authenticated user is authorized.

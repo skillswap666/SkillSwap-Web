@@ -2,7 +2,7 @@ package club.skillswap.skillswapbackend.workshop.dto;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.List;
+import java.util.Set;
 
 // 使用 record 简化代码
 public record WorkshopCreateRequestDto(
@@ -14,10 +14,10 @@ public record WorkshopCreateRequestDto(
     LocalDate date,
     LocalTime time,
     boolean isOnline,
-    List<String> location,
+    Set<String> location,
     int maxParticipants,
     int creditReward,
-    List<String> tags,
-    List<String> materials,
-    List<String> requirements
+    Set<String> tags,
+    Set<String> materials,
+    Set<String> requirements
 ) {}

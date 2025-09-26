@@ -5,15 +5,13 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import lombok.Getter;
 import lombok.Setter;
-
-import jakarta.persistence.CascadeType;
 
 @Entity
 @Table(name = "workshops")
@@ -47,7 +45,8 @@ public class Workshop {
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "workshop_locations", joinColumns = @JoinColumn(name = "workshop_id"))
     @Column(name = "location")
-    private List<String> location;
+    @org.hibernate.annotations.Fetch(org.hibernate.annotations.FetchMode.SUBSELECT)
+    private Set<String> location;
 
     @Column(name = "max_participants")
     private int maxParticipants;
@@ -66,16 +65,19 @@ public class Workshop {
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "workshop_tags", joinColumns = @JoinColumn(name = "workshop_id"))
     @Column(name = "tag")
-    private List<String> tags;
+    @org.hibernate.annotations.Fetch(org.hibernate.annotations.FetchMode.SUBSELECT)
+    private Set<String> tags;
 
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "workshop_materials", joinColumns = @JoinColumn(name = "workshop_id"))
     @Column(name = "material")
-    private List<String> materials;
+    @org.hibernate.annotations.Fetch(org.hibernate.annotations.FetchMode.SUBSELECT)
+    private Set<String> materials;
 
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "workshop_requirements", joinColumns = @JoinColumn(name = "workshop_id"))
     @Column(name = "requirement")
-    private List<String> requirements;
+    @org.hibernate.annotations.Fetch(org.hibernate.annotations.FetchMode.SUBSELECT)
+    private Set<String> requirements;
 
 }

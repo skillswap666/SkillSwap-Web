@@ -2,6 +2,7 @@ package club.skillswap.skillswapbackend.workshop.repository;
 
 import club.skillswap.skillswapbackend.workshop.entity.Workshop;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,4 +22,9 @@ public interface WorkshopRepository extends JpaRepository<Workshop, Long> {
            "LEFT JOIN FETCH w.requirements " +
            "WHERE w.id = :id")
     Optional<Workshop> findByIdWithDetails(@Param("id") Long id);
+    @Query("""
+            select distinct w from Workshop w
+            left join fetch w.facilitator
+            """)
+    List<Workshop> findAllWithFacilitator();
 }

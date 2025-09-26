@@ -1,5 +1,6 @@
 package club.skillswap.skillswapbackend.workshop.controller;
 
+import club.skillswap.skillswapbackend.common.dto.ApiMessageDto;
 import club.skillswap.skillswapbackend.workshop.dto.WorkshopCreateRequestDto;
 import club.skillswap.skillswapbackend.workshop.dto.WorkshopResponseDto;
 import club.skillswap.skillswapbackend.workshop.service.WorkshopService;
@@ -41,8 +42,8 @@ public class WorkshopController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteWorkshop(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<ApiMessageDto> deleteWorkshop(@PathVariable Long id, Authentication authentication) {
         workshopService.deleteWorkshop(id, authentication);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(new ApiMessageDto("delete success"));
     }
 }

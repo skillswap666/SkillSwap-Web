@@ -12,13 +12,14 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -72,21 +73,32 @@ public class WorkshopServiceImpl implements WorkshopService {
     @Override
     @Transactional(readOnly = true)
     public List<WorkshopResponseDto> getAllWorkshops() {
-        return workshopRepository.findAll().stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
+        List<Workshop> workshops = workshopRepository.findAllWithFacilitator();
+        // 触发懒加载
+        workshops.forEach(w -> {
+            w.getLocation().size();
+            w.getTags().size();
+            w.getMaterials().size();
+            w.getRequirements().size();
+        });
+        return workshops.stream().map(this::mapToDto).toList();
     }
 
     @Override
     @Transactional
     public void deleteWorkshop(Long workshopId, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please login.");
+        }
+
         // 1. 根据ID查找Workshop，如果找不到则抛出异常
         Workshop workshop = workshopRepository.findById(workshopId)
                 .orElseThrow(() -> new ResourceNotFoundException("Workshop not found with ID: " + workshopId));
 
         // 2. 获取当前操作用户的ID和角色
-        String currentUserId = authentication.getName();
-        boolean isAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        String currentUserId = extractUserId(authentication);
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ADMIN"));
 
         // 3. 获取Workshop创建者的ID
         String facilitatorId = workshop.getFacilitator().getId().toString();
@@ -127,5 +139,37 @@ public class WorkshopServiceImpl implements WorkshopService {
             facilitatorDto,
             workshop.getCreatedAt()
             );
+    }
+
+    private String extractUserId(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Please login.");
+        }
+
+        // 1) Spring Resource Server（Bearer JWT）
+        if (authentication instanceof JwtAuthenticationToken jwtAuth) {
+            // 一般就是用户的 UUID（JWT 的 sub）
+            return jwtAuth.getToken().getSubject();
+            // 也可以从 claim 里取：jwtAuth.getTokenAttributes().get("sub")
+        }
+
+        // 2) 传统表单/自定义 UserDetails
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof UserDetails ud) {
+            // 通常是用户名；如果你的 username 存的是 UUID，这里就是 UUID
+            return ud.getUsername();
+        }
+
+        // 3) OAuth2 Login（Google/GitHub/…）
+        if (principal instanceof DefaultOAuth2User ou) {
+            Object sub = ou.getAttribute("sub"); // 有些提供方用 "id"
+            if (sub != null) return sub.toString();
+            Object id = ou.getAttribute("id");
+            if (id != null) return id.toString();
+            return ou.getName(); // fallback
+        }
+
+        // 4) 兜底
+        return authentication.getName();
     }
 }
