@@ -27,11 +27,6 @@
   cd skill-swap-backend
   ```
 
-<<<<<<< HEAD
-  Run `.\gradlew.bat bootRun` for Windows
-
-  Run `./gradlew bootRun` for Mac
-=======
   Run below for installing dependencies
 
   ```bash
@@ -41,11 +36,15 @@
   
   Run below to start the backend
 
+   ```bash
+  .\gradlew.bat bootRun --args="--spring.profiles.active=dev"         # macOS/Linux
+  .\gradlew.bat bootRun        # Windows
+  ```
+
   ```bash
   ./gradlew bootRun          # macOS/Linux
   .\gradlew.bat bootRun        # Windows
   ```
->>>>>>> 56a101af75f0d0702718fdc6190add170135d23d
   
   ## Add new functions
 
@@ -64,3 +63,12 @@
   Then commit & push.
 
   - If you want to merge your function to master branch, please make a pull request, past all the checks, then merge.
+
+## Connection to Database Fail (Max client connections reached)
+
+  Try to run below to kill all the java progress, then restart
+
+  ```
+  taskkill /IM java.exe /F
+  taskkill /IM gradle* /F
+  ```

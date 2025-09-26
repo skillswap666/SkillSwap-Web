@@ -39,6 +39,26 @@ public class UserService {
     }
 
     /**
+     * 根据字符串形式的用户 ID 查找用户公开信息。
+     * 这个方法主要是为了配合 WorkshopService 的需求。
+     * 如果找不到会抛出异常。
+     */
+    public UserAccount findUserByStringId(String userId) {
+        // 1. 在这里，我们将 String 转换为 UUID
+        UUID userUuid;
+        try {
+            userUuid = UUID.fromString(userId);
+        } catch (IllegalArgumentException e) {
+            // 如果传入的字符串格式不正确，可以抛出自定义异常或返回错误
+            throw new ResourceNotFoundException("Invalid user ID format: " + userId);
+        }
+
+        // 2. 调用上面那个已经存在的、接收 UUID 的 findUserById 方法
+        // 或者直接调用 repository 的 findById，效果一样
+        return findUserById(userUuid);
+    }
+
+    /**
      * 获取当前认证的用户。
      * 如果这是用户第一次访问，会自动为他们创建一个 UserAccount 资料记录。
      */
