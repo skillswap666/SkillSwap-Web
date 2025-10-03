@@ -58,11 +58,31 @@ export function AuthPage() {
     const { error } = await supabase.auth.signUp({
       email: signUpData.email,
       password: signUpData.password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/home`,
+      },
     });
     if (error) {
       alert(error.message);
     } else {
       alert('Check your email for a confirmation link');
+    }
+    setLoading(false);
+  };
+
+  const handleMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email: signInData.email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/home`,
+      },
+    });
+    if (error) {
+      alert(error.message);
+    } else {
+      alert('Check your email for a magic link');
     }
     setLoading(false);
   };
@@ -173,6 +193,18 @@ export function AuthPage() {
                   </Button>
                 </form>
 
+                <div className="mt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleMagicLink}
+                    disabled={loading || !signInData.email}
+                  >
+                    {loading ? 'Sending...' : 'Send Magic Link'}
+                  </Button>
+                </div>
+
                 <div className="mt-6">
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
@@ -275,6 +307,18 @@ export function AuthPage() {
                     {loading ? 'Creating Account...' : 'Create Account'}
                   </Button>
                 </form>
+
+                <div className="mt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleMagicLink}
+                    disabled={loading || !signUpData.email}
+                  >
+                    {loading ? 'Sending...' : 'Send Magic Link Instead'}
+                  </Button>
+                </div>
 
                 <Button
                   variant="outline"

@@ -1,7 +1,31 @@
 // lib/api.ts
 
-import { supabase } from '../utils/supabase';
+import { supabase } from '../utils/supabase/supabase';
 import { mockUser, mockUsers, mockWorkshops, mockTransactions } from './mock-data';
+
+// Backend API configuration
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+
+// Helper function to make API calls with authentication
+const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+  const { session } = await supabase.auth.getSession();
+  const token = session?.access_token;
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Bearer ${token}` }),
+      ...options.headers,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`API call failed: ${response.status} ${response.statusText}`);
+  }
+
+  return response.json();
+};
 
 // ----------------------
 // AUTH API
@@ -12,6 +36,18 @@ export const authAPI = {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/home` },
+    });
+    if (error) throw error;
+    return data;
+  },
+
+  // Magic link authentication
+  signInWithMagicLink: async (email: string) => {
+    const { data, error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/home`,
+      },
     });
     if (error) throw error;
     return data;
@@ -87,12 +123,29 @@ export const userAPI = {
 // WORKSHOP API
 // ----------------------
 export const workshopAPI = {
-  getAll: async () => mockWorkshops,
+  // Get all workshops from backend
+  getAll: async () => {
+    try {
+      return await apiCall('/api/v1/workshops');
+    } catch (error) {
+      console.warn('Failed to fetch workshops from backend, using mock data:', error);
+      return mockWorkshops;
+    }
+  },
 
-  getById: async (id: string) =>
-    mockWorkshops.find((w) => w.id === id) || null,
+  // Get workshop by ID from backend
+  getById: async (id: string) => {
+    try {
+      return await apiCall(`/api/v1/workshops/${id}`);
+    } catch (error) {
+      console.warn('Failed to fetch workshop from backend, using mock data:', error);
+      return mockWorkshops.find((w) => w.id === id) || null;
+    }
+  },
 
+  // Create workshop (for now, use mock data)
   create: async (data: any) => {
+    // TODO: Implement real backend API call
     const newWorkshop = {
       id: 'workshop-' + Date.now(),
       status: 'upcoming',
@@ -103,7 +156,9 @@ export const workshopAPI = {
     return newWorkshop;
   },
 
+  // Join workshop (for now, use mock data)
   join: async (workshopId: string, userId: string) => {
+    // TODO: Implement real backend API call
     const workshop = mockWorkshops.find((w) => w.id === workshopId);
     if (workshop) {
       if (!workshop.participants.some((p) => p.id === userId)) {
