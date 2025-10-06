@@ -1,0 +1,10 @@
+node_modules
+.env.local
+prisma/migrations
+prisma/dev.db
+
+# Environment files
+.env
+.env.local
+.env.production
+.env.development

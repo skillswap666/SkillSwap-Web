@@ -1,0 +1,41 @@
+{
+  "name": "skill-swap-backend",
+  "version": "1.0.0",
+  "description": "SkillSwap Backend API with Prisma ORM and SQLite",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "npx kill-port 4000 && tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.16.3",
+    "@supabase/supabase-js": "^2.58.0",
+    "@types/morgan": "^1.9.10",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.1",
+    "prisma": "^6.16.3"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^20.10.5",
+    "kill-port": "^2.0.1",
+    "tsx": "^4.6.2",
+    "typescript": "^5.3.3"
+  },
+  "keywords": [
+    "skillswap",
+    "api",
+    "prisma",
+    "sqlite",
+    "express"
+  ],
+  "author": "SkillSwap Team",
+  "license": "MIT"
+}
