@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const API_URL = import.meta.env.VITE_API_URL as string;
 
 export interface User {
   id: string;
@@ -13,6 +13,7 @@ export interface User {
 class ApiService {
   private async getAuthHeaders(): Promise<HeadersInit> {
     const { data: { session } } = await supabase.auth.getSession();
+    console.log(session?.access_token);
     
     const headers: HeadersInit = {
       'Content-Type': 'application/json',

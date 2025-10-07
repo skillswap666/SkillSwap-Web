@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import SignInPage from './pages/SignInPage';
 import ProfilePage from './pages/ProfilePage';
+import WelcomePage from './pages/WelcomePage';
+import HelloPage from './pages/HelloPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -21,7 +23,19 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<WelcomePage />} />
           <Route path="/signin" element={<SignInPage />} />
+          
+          {/* Protected Routes */}
+          <Route
+            path="/hello"
+            element={
+              <ProtectedRoute>
+                <HelloPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/profile"
             element={
@@ -30,7 +44,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/" element={<Navigate to="/profile" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

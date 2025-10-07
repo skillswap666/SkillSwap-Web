@@ -36,6 +36,7 @@ export const useWorkshops = (options: {
     }
   };
 
+  
   // ✅ Re-run fetch when filter options change
   useEffect(() => {
     fetchWorkshops();
