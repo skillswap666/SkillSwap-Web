@@ -1,3 +1,6 @@
+// ------------------------------------
+// DATABASE CONFIGURATION
+// ------------------------------------
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
@@ -7,12 +10,57 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// ------------------------------------
+// MODELS
+// ------------------------------------
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  bio       String?
-  credits   Int      @default(100)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              String      @id @default(cuid())
+  email           String      @unique
+  name            String
+  bio             String?
+  credits         Int         @default(100)
+  skills          String      @default("[]")  // JSON string array: ["React", "TypeScript"]
+  rating          Float?                      // Average rating (0–5 scale)
+  profilePicture  String?                     // URL to avatar or uploaded image
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  // Relations
+  hostedWorkshops   Workshop[]        @relation("HostedWorkshops")
+  attendedWorkshops WorkshopAttendee[]
+}
+
+model Workshop {
+  id              String              @id @default(cuid())
+  title           String
+  description     String
+  category        String?
+  skillLevel      String?
+  date            DateTime
+  location        String
+  isOnline        Boolean             @default(false)
+  creditCost      Int                 @default(0)
+  creditReward    Int                 @default(0)
+  maxParticipants Int?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  // Host (facilitator)
+  hostId  String
+  host    User                @relation("HostedWorkshops", fields: [hostId], references: [id])
+
+  // Attendees
+  attendees WorkshopAttendee[]
+}
+
+model WorkshopAttendee {
+  id          String   @id @default(cuid())
+  userId      String
+  workshopId  String
+  joinedAt    DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id])
+  workshop    Workshop @relation(fields: [workshopId], references: [id])
+
+  @@unique([userId, workshopId]) // prevent duplicate registrations
 }
