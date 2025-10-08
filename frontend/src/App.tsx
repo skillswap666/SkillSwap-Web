@@ -1,52 +1,74 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { Navigation } from './pages/Navigation';
+import { Dashboard } from './pages/Dashboard';
+import HomePage from './pages/HomePage';
 import SignInPage from './pages/SignInPage';
-import ProfilePage from './pages/ProfilePage';
-import WelcomePage from './pages/WelcomePage';
-import HelloPage from './pages/HelloPage';
 
+
+
+// ------------------------------------
+// ProtectedRoute
+// ------------------------------------
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-    </div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
 
   return user ? <>{children}</> : <Navigate to="/signin" replace />;
 }
 
-function App() {
+// ------------------------------------
+// Main App Layout
+// ------------------------------------
+function AppLayout() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <div className="pt-20 lg:pt-24">
         <Routes>
+          {/* Redirect root "/" → /home */}
+          <Route path="/" element={<Navigate to="/home" replace />} />
+
           {/* Public Routes */}
-          <Route path="/" element={<WelcomePage />} />
+          <Route path="/home" element={<HomePage />} />
           <Route path="/signin" element={<SignInPage />} />
-          
+
           {/* Protected Routes */}
           <Route
-            path="/hello"
+            path="/dashboard"
             element={
               <ProtectedRoute>
-                <HelloPage />
+                <Dashboard />
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            }
-          />
+
+          {/* Catch-all → redirect to home */}
+          <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
-      </AuthProvider>
-    </BrowserRouter>
+      </div>
+    </div>
+  );
+}
+
+// ------------------------------------
+// Main App
+// ------------------------------------
+function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <AppLayout />
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 
